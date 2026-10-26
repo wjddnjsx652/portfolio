@@ -131,7 +131,7 @@
   }
 
   function headerHTML() {
-    var links = [['intro', '소개'], ['competency', '역량'], ['projects', '프로젝트'], ['achievements', '성과'], ['awards', '수상'], ['lectures', '강의']];
+    var links = [['intro', '소개'], ['competency', '역량'], ['projects', '프로젝트'], ['achievements', '직무 성과'], ['awards', '수상'], ['lectures', '강의']];
     return '<div class="wrap gnb-in"><a class="logo" href="#intro" aria-label="맨 위로"><b>' + esc(D.profile.name) + '</b><span>Portfolio</span></a>' +
       '<nav class="nav" aria-label="주요 메뉴">' + links.map(function (l) { return '<a href="#' + l[0] + '" data-nav="' + l[0] + '">' + l[1] + '</a>'; }).join('') + '</nav></div>';
   }
@@ -225,15 +225,15 @@
     if (c.email) parts.push('<a href="mailto:' + esc(c.email) + '">' + esc(c.email) + '</a>');
     if (c.phone) parts.push('<span>' + esc(c.phone) + '</span>');
     return '<div class="wrap foot-in"><p class="foot-name">' + esc(D.profile.name) + '</p>' +
-      '<p class="foot-sub">전기차 충전 인프라 시험 · 인증 · 구축</p>' + (parts.length ? '<p class="foot-contact">' + parts.join('<i></i>') + '</p>' : '') + '</div>';
+      (D.profile.tagline ? '<p class="foot-sub">' + esc(D.profile.tagline) + '</p>' : '') + (parts.length ? '<p class="foot-contact">' + parts.join('<i></i>') + '</p>' : '') + '</div>';
   }
 
-  /* ---------- 증빙 사진 ---------- */
+  /* ---------- 이미지 ---------- */
   function srcOf(e) { return state.previews[e.src] || e.src; }
 
   /* 한 장짜리 칸 (상장 · 강의 사진): 사진이 있으면 보여 주고, 관리자는 바꾸기/삭제, 없으면 방문자에게는 숨김 */
   function evOneHTML(id, list, adm, o) {
-    var e = list[0], label = o.label || '사진 추가', alt = o.alt || '증빙 사진';
+    var e = list[0], label = o.label || '사진 추가', alt = o.alt || '이미지';
     if (!e) return '<label class="ev-add one">' + ICON.camera + '<span>' + esc(label) + '</span><input type="file" accept="image/*" data-one data-ev-upload="' + id + '"></label>';
     return '<figure class="ev-one"><button class="ev-thumb" type="button" data-ev-open="' + id + '" data-i="0" aria-label="' + esc(alt) + ' 크게 보기">' +
       '<img loading="lazy" decoding="async" src="' + esc(srcOf(e)) + '" alt="' + esc(alt) + '"></button>' +
@@ -249,8 +249,8 @@
     if (o && o.one) return evOneHTML(id, list, adm, o);
     var items = list.map(function (e, i) {
       var cap = e.caption || '';
-      return '<figure class="ev-item"><button class="ev-thumb" type="button" data-ev-open="' + id + '" data-i="' + i + '" aria-label="증빙 사진 크게 보기' + (cap ? ': ' + esc(cap) : '') + '">' +
-        '<img loading="lazy" decoding="async" src="' + esc(srcOf(e)) + '" alt="' + esc(cap || '증빙 사진') + '"></button>' +
+      return '<figure class="ev-item"><button class="ev-thumb" type="button" data-ev-open="' + id + '" data-i="' + i + '" aria-label="이미지 크게 보기' + (cap ? ': ' + esc(cap) : '') + '">' +
+        '<img loading="lazy" decoding="async" src="' + esc(srcOf(e)) + '" alt="' + esc(cap || '이미지') + '"></button>' +
         (adm
           ? '<button class="ev-del" type="button" data-ev-del="' + id + '" data-i="' + i + '" aria-label="사진 삭제">' + ICON.del + '</button>' +
             '<input class="ev-cap" type="text" maxlength="80" data-ev-cap="' + id + '" data-i="' + i + '" value="' + esc(cap) + '" placeholder="사진 설명 입력">'
@@ -258,12 +258,12 @@
         '</figure>';
     }).join('');
     var add = adm ? '<label class="ev-add"><input type="file" accept="image/*" multiple data-ev-upload="' + id + '">' + ICON.camera + '<span>사진 추가</span></label>' : '';
-    return '<div class="ev-head">증빙 자료<span>' + list.length + '</span></div><div class="ev-grid">' + items + add + '</div>';
+    return '<div class="ev-head">이미지<span>' + list.length + '</span></div><div class="ev-grid">' + items + add + '</div>';
   }
 
   function mediaHTML(id, art) {
     var first = (state.evidence[id] || [])[0];
-    if (first) return '<img decoding="async" src="' + esc(srcOf(first)) + '" alt="' + esc(first.caption || '증빙 사진') + '">';
+    if (first) return '<img decoding="async" src="' + esc(srcOf(first)) + '" alt="' + esc(first.caption || '이미지') + '">';
     return ART[art] ? ART[art]() : '';
   }
 
@@ -276,7 +276,7 @@
       var n = (state.evidence[el.dataset.evBadge] || []).length;
       el.innerHTML = n ? '<span class="ev-badge">' + ICON.camera + n + '</span>' : '';
     });
-    // 대표 이미지: 증빙 사진이 있으면 첫 사진, 없으면 기본 그래픽
+    // 대표 이미지: 올린 이미지가 있으면 첫 번째, 없으면 기본 그래픽
     $$('[data-media]').forEach(function (el) {
       var first = (state.evidence[el.dataset.media] || [])[0];
       var key = first ? srcOf(first) : 'art';
@@ -298,9 +298,13 @@
 
   function loadEvidence() {
     return fetch('evidence.json?v=' + Date.now(), { cache: 'no-store' })
-      .then(function (r) { return r.ok ? r.json() : {}; })
-      .catch(function () { return {}; })
-      .then(function (j) { state.evidence = normalizeEvidence(j); refreshEvidence(); });
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; })
+      .then(function (j) {
+        /* 파일을 PC에서 직접 열면(index.html 더블클릭) evidence.json 을 읽을 수 없어서, 같이 들어 있는 사본을 대신 사용 */
+        if (!j) j = window.PORTFOLIO_EVIDENCE || {};
+        state.evidence = normalizeEvidence(j); refreshEvidence();
+      });
   }
 
   /* 사진 로딩 실패: 관리자는 raw 주소로 한 번 더 시도, 그래도 안 되면 안내 표시(대표 이미지는 기본 그래픽으로 복귀) */
@@ -439,7 +443,7 @@
     if (!e) { closeLB(); return; }
     lb.img.removeAttribute('data-retry');
     lb.img.src = srcOf(e);
-    lb.img.alt = e.caption || '증빙 사진';
+    lb.img.alt = e.caption || '이미지';
     lb.cap.textContent = e.caption || '';
     lb.count.textContent = list.length > 1 ? (lb.i + 1) + ' / ' + list.length : '';
     lb.el.classList.toggle('single', list.length < 2);

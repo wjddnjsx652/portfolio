@@ -1,5 +1,5 @@
 /* ==========================================================================
-   관리자 모드 — 증빙 사진을 GitHub 저장소에 바로 올립니다.
+   관리자 모드 — 이미지를 GitHub 저장소에 바로 올립니다.
 
    사용법: 사이트 주소 끝에 #admin 을 붙여 접속 → 사용자명·저장소·토큰 입력.
    - 사진은 브라우저에서 줄여서(긴 변 1800px) 저장소의 evidence/ 폴더에 올라갑니다.
@@ -164,7 +164,7 @@
         return api.compress(file).then(function (blob) {
           var path = 'evidence/' + id + '-' + stamp + '-' + i + '.jpg';
           return blobToB64(blob).then(function (b64) {
-            return putFile(path, b64, '증빙 사진 추가 (' + id + ')').then(function () {
+            return putFile(path, b64, '이미지 추가 (' + id + ')').then(function () {
               state.previews[path] = URL.createObjectURL(blob);
               uploaded.push({ src: path, caption: '', added: new Date().toISOString().slice(0, 10) });
             });
@@ -179,7 +179,7 @@
       return mutateEvidence(function (data) {
         if (one) { replaced = (data[id] || []).map(function (e) { return e.src; }); data[id] = uploaded; }
         else data[id] = (data[id] || []).concat(uploaded);
-      }, '증빙 목록 갱신 (' + id + ')');
+      }, '이미지 목록 갱신 (' + id + ')');
     }).then(function (data) {
       state.evidence = data;
       PF.refreshEvidence();
@@ -199,7 +199,7 @@
     toast('설명 저장 중…', '', true);
     mutateEvidence(function (data) {
       (data[id] || []).forEach(function (e) { if (e.src === src) e.caption = text; });
-    }, '증빙 설명 수정 (' + id + ')').then(function (data) {
+    }, '이미지 설명 수정 (' + id + ')').then(function (data) {
       state.evidence = data; PF.refreshEvidence(); toast('설명을 저장했습니다.', 'ok');
     }).catch(function (e) { toast(e.message, 'err'); }).then(function () { busy = false; });
   }
@@ -215,9 +215,9 @@
     mutateEvidence(function (data) {
       data[id] = (data[id] || []).filter(function (e) { return e.src !== src; });
       if (!data[id].length) delete data[id];
-    }, '증빙 사진 삭제 (' + id + ')').then(function (data) {
+    }, '이미지 삭제 (' + id + ')').then(function (data) {
       state.evidence = data; PF.refreshEvidence();
-      return deleteFile(src, '증빙 사진 파일 삭제').catch(function () { /* 목록에서는 이미 빠졌으므로 무시 */ });
+      return deleteFile(src, '이미지 파일 삭제').catch(function () { /* 목록에서는 이미 빠졌으므로 무시 */ });
     }).then(function () { toast('삭제했습니다.', 'ok'); })
       .catch(function (e) { toast(e.message, 'err'); }).then(function () { busy = false; });
   }
@@ -232,7 +232,7 @@
     modal.innerHTML =
       '<form class="modal-card" role="dialog" aria-modal="true" aria-labelledby="am-t" autocomplete="off">' +
       '<h2 id="am-t">관리자 모드</h2>' +
-      '<p class="modal-sub">증빙 사진을 GitHub 저장소에 올리려면 연결이 필요합니다. 토큰은 이 브라우저에만 저장되며 다른 곳으로 보내지 않습니다.</p>' +
+      '<p class="modal-sub">이미지를 GitHub 저장소에 올리려면 연결이 필요합니다. 토큰은 이 브라우저에만 저장되며 다른 곳으로 보내지 않습니다.</p>' +
       '<label>GitHub 사용자명<input type="text" name="owner" required spellcheck="false" autocapitalize="off"></label>' +
       '<label>저장소 이름<input type="text" name="repo" required spellcheck="false" autocapitalize="off"></label>' +
       '<label>브랜치<input type="text" name="branch" value="main" required spellcheck="false" autocapitalize="off"></label>' +
