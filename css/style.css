@@ -307,10 +307,10 @@ button.chip:active { transform: scale(.95); }
 .hist-body h3 { font-size: 22px; font-weight: 700; letter-spacing: -.02em; line-height: 1.4; margin-bottom: 22px; }
 .hist-lines { border-top: 1px solid var(--line-d); }
 .hist-lines li { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 16px; padding: 17px 0; border-bottom: 1px solid var(--line-d); transition: opacity .7s var(--ease), transform .7s var(--ease); }
-.hist-lines li:nth-child(1) { transition-delay: .25s; } .hist-lines li:nth-child(2) { transition-delay: .35s; } .hist-lines li:nth-child(3) { transition-delay: .45s; }
+.hist-lines li:nth-child(1) { transition-delay: .25s; } .hist-lines li:nth-child(2) { transition-delay: .35s; } .hist-lines li:nth-child(3) { transition-delay: .45s; } .hist-lines li:nth-child(4) { transition-delay: .55s; }
 .hist-lines span { font-size: 15px; font-weight: 700; color: var(--blue-hi); }
 .hist-lines p { font-size: 17px; font-weight: 500; color: rgba(255,255,255,.9); line-height: 1.6; }
-.hist-lines li:last-child p { color: #fff; font-weight: 700; }
+.hist-lines li:nth-child(3) p { color: #fff; font-weight: 700; }  /* 문제·방법·결과 / 수여·일자·내용 중 세 번째 줄(결과·내용)을 강조 */
 .rv .hist-item:not(.in) .hist-key span { clip-path: inset(0 100% 0 0); transform: translateX(-28px); opacity: 0; }
 .rv .hist-item:not(.in) .hist-lines li { opacity: 0; transform: translateY(14px); }
 .hist-key span { clip-path: inset(0 0 0 0); }
