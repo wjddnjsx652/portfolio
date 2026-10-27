@@ -159,7 +159,7 @@
       '<div class="cap-body"><div class="cap-img" data-media="' + c.id + '" data-art="' + c.art + '"></div>' +
       '<div class="cap-main"><h4 class="cap-sub">수행 업무</h4><dl class="cap-table">' +
       c.tasks.map(function (t, i) { return '<div style="--r:' + i + '"><dt>' + esc(t.label) + '</dt><dd>' + esc(t.text) + '</dd></div>'; }).join('') + '</dl></div>' +
-      '<div class="ev-slot" data-ev="' + c.id + '"></div></div>';
+      '<div class="ev-slot" data-ev="' + c.id + '" data-skip-first></div></div>';
   }
 
   /* 프로젝트: 제목 목록 (누르면 상세 페이지) */
@@ -246,7 +246,11 @@
     var adm = !!state.admin;
     if (!list.length && !adm) return '';
     if (o && o.one) return evOneHTML(id, list, adm, o);
+    // skipFirst: 첫 사진은 이미 큰 대표 이미지로 보이므로, 방문자에게는 나머지 사진만 작게 보여 줌 (관리자는 전체)
+    var from = (o && o.skipFirst && !adm) ? 1 : 0;
+    if (list.length <= from && !adm) return '';
     var items = list.map(function (e, i) {
+      if (i < from) return '';
       var cap = e.caption || '';
       return '<figure class="ev-item"><button class="ev-thumb" type="button" data-ev-open="' + id + '" data-i="' + i + '" aria-label="이미지 크게 보기' + (cap ? ': ' + esc(cap) : '') + '">' +
         '<img loading="lazy" decoding="async" src="' + esc(srcOf(e)) + '" alt="' + esc(cap || '이미지') + '"></button>' +
@@ -257,7 +261,7 @@
         '</figure>';
     }).join('');
     var add = adm ? '<label class="ev-add"><input type="file" accept="image/*" multiple data-ev-upload="' + id + '">' + ICON.camera + '<span>사진 추가</span></label>' : '';
-    return '<div class="ev-head">이미지<span>' + list.length + '</span></div><div class="ev-grid">' + items + add + '</div>';
+    return '<div class="ev-head">' + (from ? '추가 이미지' : '이미지') + '<span>' + (list.length - from) + '</span></div><div class="ev-grid">' + items + add + '</div>';
   }
 
   function mediaHTML(id, art) {
@@ -266,10 +270,21 @@
     return ART[art] ? ART[art]() : '';
   }
 
+  /* 역량의 큰 이미지: 사진이 있으면 눌러서 크게 보기 */
+  function setZoomable(el, on) {
+    el.classList.toggle('is-photo', on);
+    if (on) {
+      el.setAttribute('data-ev-open', el.dataset.media); el.dataset.i = '0';
+      el.setAttribute('role', 'button'); el.tabIndex = 0; el.setAttribute('aria-label', '이미지 크게 보기');
+    } else {
+      ['data-ev-open', 'data-i', 'role', 'tabindex', 'aria-label'].forEach(function (a) { el.removeAttribute(a); });
+    }
+  }
+
   function refreshEvidence() {
     $$('.ev-slot').forEach(function (el) {
       if (el.contains(document.activeElement) && document.activeElement.matches('.ev-cap')) return;
-      el.innerHTML = evHTML(el.dataset.ev, { one: el.hasAttribute('data-one'), label: el.dataset.label, alt: el.dataset.alt });
+      el.innerHTML = evHTML(el.dataset.ev, { one: el.hasAttribute('data-one'), skipFirst: el.hasAttribute('data-skip-first'), label: el.dataset.label, alt: el.dataset.alt });
     });
     $$('[data-ev-badge]').forEach(function (el) {
       var n = (state.evidence[el.dataset.evBadge] || []).length;
@@ -279,6 +294,7 @@
     $$('[data-media]').forEach(function (el) {
       var first = (state.evidence[el.dataset.media] || [])[0];
       var key = first ? srcOf(first) : 'art';
+      if (el.classList.contains('cap-img')) setZoomable(el, !!first);
       if (el.dataset.mk === key) return;
       el.dataset.mk = key;
       el.innerHTML = mediaHTML(el.dataset.media, el.dataset.art);
@@ -318,7 +334,7 @@
       img.src = 'https://raw.githubusercontent.com/' + a.owner + '/' + a.repo + '/' + a.branch + '/' + src;
       return;
     }
-    if (media) { media.dataset.mk = 'art'; media.innerHTML = ART[media.dataset.art] ? ART[media.dataset.art]() : ''; return; }
+    if (media) { if (media.classList.contains('cap-img')) setZoomable(media, false); media.dataset.mk = 'art'; media.innerHTML = ART[media.dataset.art] ? ART[media.dataset.art]() : ''; return; }
     if (thumb) { thumb.classList.add('pending'); thumb.textContent = a ? '반영 중 (약 1분)' : '사진 없음'; }
   }, true);
 
@@ -514,6 +530,7 @@
       if (e.key === 'Escape') { closeProj(); return; }
       trapTab(e, proj.el); return;
     }
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('.cap-img[data-ev-open]')) { e.preventDefault(); e.target.click(); return; }
     if (e.key === 'Escape' && state.cap != null && e.target.closest && e.target.closest('#competency')) closeCap(true);
   });
 

@@ -142,7 +142,7 @@ button.chip:active { transform: scale(.95); }
 /* ---------- 역량: 세로 이미지 패널 → 누르면 내용 ---------- */
 .cap-panels { --ph: clamp(340px, 36vw, 500px); --pc: 112px; display: flex; max-width: 1680px; margin: 0 auto; border-top: 1px solid var(--line-d); border-bottom: 1px solid var(--line-d); }
 .cap-panel {
-  --h: var(--ph);
+  --h: var(--ph); --dim: .82;
   position: relative; isolation: isolate; flex: 1 1 0; min-width: 0; height: var(--h); overflow: hidden;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; text-align: center;
   padding: 0 18px calc(var(--h) * .4); color: #fff; background: #0b1220;
@@ -152,13 +152,13 @@ button.chip:active { transform: scale(.95); }
 .cap-bg { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; transform: scale(1.02); transition: transform 1.2s var(--ease); }
 .cap-panel::before {
   content: ""; position: absolute; inset: 0; z-index: -1;
-  background: linear-gradient(180deg, rgba(6,10,20,.58) 0%, rgba(6,10,20,.26) 42%, rgba(6,10,20,.42) 100%); transition: background .5s;
+  background: linear-gradient(180deg, rgba(5,9,18,.84), rgba(5,9,18,.66)); opacity: var(--dim); transition: opacity .7s var(--ease);
 }
 .cap-panel::after {
   content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--blue);
   transform: scaleX(0); transform-origin: left; transition: transform .55s var(--ease);
 }
-.cap-name { font-size: clamp(17px, 1.7vw, 24px); font-weight: 700; letter-spacing: -.03em; line-height: 1.35; text-wrap: balance; text-shadow: 0 2px 14px rgba(0,0,0,.55); }
+.cap-name { font-size: clamp(17px, 1.7vw, 24px); font-weight: 700; letter-spacing: -.03em; line-height: 1.35; text-wrap: balance; text-shadow: 0 1px 3px rgba(0,0,0,.45), 0 2px 18px rgba(0,0,0,.6); }
 .cap-go {
   display: flex; max-height: 14px; color: rgba(255,255,255,.92); filter: drop-shadow(0 1px 6px rgba(0,0,0,.5));
   transition: transform .55s var(--ease), max-height .5s var(--ease), margin .5s var(--ease), opacity .4s;
@@ -169,9 +169,17 @@ button.chip:active { transform: scale(.95); }
 /* 하나를 누르면: 패널이 낮은 탭 줄로 줄어들고, 아래에 내용이 열림 */
 .cap-panels.has-sel .cap-panel { --h: var(--pc); padding-bottom: 4px; }
 .cap-panels.has-sel .cap-go { max-height: 0; margin-top: -22px; opacity: 0; }
-.cap-panels.has-sel .cap-panel::before { background: rgba(6,10,20,.74); }
-.cap-panels.has-sel .cap-panel.is-active::before { background: linear-gradient(180deg, rgba(6,10,20,.3), rgba(6,10,20,.5)); }
+.cap-panels.has-sel .cap-panel { --dim: 1; }
+.cap-panels.has-sel .cap-panel.is-active { --dim: .4; }
 .cap-panels.has-sel .cap-name { font-size: clamp(16px, 1.45vw, 21px); }
+
+/* 마우스를 올린 패널만 밝아짐 (터치 화면에서는 적용 안 함) */
+@media (hover: hover) {
+  .cap-panel:hover, .cap-panel:focus-visible { --dim: .06; }
+  .cap-panels.has-sel .cap-panel:not(.is-active):hover, .cap-panels.has-sel .cap-panel:not(.is-active):focus-visible { --dim: .5; }
+  .cap-panel:hover .cap-bg, .cap-panel:focus-visible .cap-bg { transform: scale(1.08); }
+  .cap-panel:hover .cap-go, .cap-panel:focus-visible .cap-go { transform: translateX(12px); }
+}
 
 .cap-view[hidden] { display: none; }
 .cap-view { padding-top: 76px; }
@@ -184,10 +192,15 @@ button.chip:active { transform: scale(.95); }
 }
 .cap-close:hover { border-color: var(--blue-hi); background: rgba(10,128,209,.22); color: #fff; }
 .cap-body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 0 64px; margin-top: 48px; align-items: start; }
-.cap-body > .cap-img { grid-column: 1; grid-row: 1; }
+.cap-body > .cap-img { grid-column: 1; grid-row: 1; margin-top: calc(20px * 1.7 + 14px); } /* 오른쪽 표의 윗줄과 높이를 맞춤 */
 .cap-body > .ev-slot { grid-column: 1; grid-row: 2; }
 .cap-main { grid-column: 2; grid-row: 1 / span 2; }
 .cap-img { aspect-ratio: 16 / 9; border-radius: 20px; overflow: hidden; background: #0e1626; animation: mediaIn .8s .08s var(--ease) both; }
+.cap-img[data-ev-open] { cursor: zoom-in; }
+.cap-img.is-photo { aspect-ratio: auto; width: fit-content; max-width: 100%; background: none; }  /* 올린 사진은 자르지 않고 원래 비율 그대로 */
+.cap-img.is-photo img { width: auto; max-width: 100%; height: auto; max-height: 440px; object-fit: contain; }
+.cap-img img { transition: transform .7s var(--ease); }
+.cap-img[data-ev-open]:hover img { transform: scale(1.04); }
 .cap-img svg, .cap-img img, .pr-thumb svg, .pr-thumb img, .pj-media svg, .pj-media img { display: block; width: 100%; height: 100%; object-fit: cover; }
 @keyframes mediaIn { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
 .cap-sub { margin: 0 0 14px; font-size: 20px; font-weight: 700; animation: rise .6s .16s var(--ease) both; }
@@ -472,17 +485,16 @@ button.chip:active { transform: scale(.95); }
   .cap-panel + .cap-panel { border-left: 0; }
   .cap-panel::after { height: 3px; }
   .cap-bg { object-position: center 62%; }
-  .cap-panel::before { background: linear-gradient(90deg, rgba(6,10,20,.8) 0%, rgba(6,10,20,.4) 100%); }
+  .cap-panel::before { background: linear-gradient(90deg, rgba(5,9,18,.9) 0%, rgba(5,9,18,.5) 100%); }
   .cap-name { font-size: 18px; }
   .cap-go { max-height: none; transform: none; }
   .cap-panels.has-sel .cap-panel { padding-bottom: 0; }
   .cap-panels.has-sel .cap-name { font-size: 16px; }
   .cap-panels.has-sel .cap-go { max-height: none; margin-top: 0; opacity: .5; }
-  .cap-panels.has-sel .cap-panel::before { background: rgba(6,10,20,.78); }
-  .cap-panels.has-sel .cap-panel.is-active::before { background: linear-gradient(90deg, rgba(6,10,20,.55), rgba(6,10,20,.3)); }
   .cap-view { padding-top: 40px; }
   .cap-body { grid-template-columns: 1fr; margin-top: 28px; }
   .cap-body > .cap-img, .cap-body > .ev-slot, .cap-main { grid-column: 1; grid-row: auto; }
+  .cap-body > .cap-img { margin-top: 0; }
   .cap-main { order: 2; margin-top: 32px; }
   .cap-body > .ev-slot { order: 3; }
   .cap-table > div { grid-template-columns: 1fr; }
