@@ -23,6 +23,7 @@ portfolio-site/
 ├─ js/app.js         화면 동작 (건드릴 필요 없음)
 ├─ js/admin.js       관리자 모드(사진 업로드)
 ├─ js/evidence-local.js  PC에서 index.html을 직접 열 때 쓰는 사진 목록 사본 (건드릴 필요 없음)
+├─ img/profile.png   첫 화면 내 사진 (배경 없는 PNG)
 ├─ evidence.json     어느 항목에 어떤 사진이 있는지 기록 (자동 관리 · 현재 사진 15장 등록됨)
 ├─ evidence/         이미지가 저장되는 폴더 (자동 관리 · 현재 사진 15장 들어 있음)
 └─ GUIDE.md          지금 보는 설명서
@@ -32,7 +33,7 @@ portfolio-site/
 
 | 영역 | 보이는 모습 |
 |---|---|
-| 소개 | 큰 `PORT FOLIO` 글자와 영문 이름표, 한 줄 소개 |
+| 소개 | 내 사진 + 이름·생년월일·학교, 그 옆에 Certifications & Awards / Experience 칸 |
 | 역량 | 왼쪽 메뉴에 마우스를 올리면(또는 누르면) 오른쪽에 수행 업무가 바뀜 |
 | 프로젝트 | 과제 제목 목록. 제목을 누르면 전체 화면 상세 페이지가 열림 |
 | 직무 성과 | 큰 키워드 + 문제·방법·결과. 위쪽 버튼으로 역량별 필터 |
@@ -89,9 +90,10 @@ portfolio-site/
 | 위치 (`js/data.js`) | 내용 |
 |---|---|
 | `profile.name` | 상단 메뉴·하단에 표시되는 이름 ("정원택") |
-| `profile.nameEn` | 첫 화면 이름표의 영문 이름 ("Jeong Won-taek") |
-| `profile.cover` | 첫 화면 큰 글자 두 줄 (`"PORT", "FOLIO"`) |
-| `profile.summary` | 큰 글자 옆의 한 줄 소개 |
+| `profile.nameEn` | 첫 화면의 영문 이름 ("WON TAEK JEONG") |
+| `profile.photo` | 첫 화면 사진 파일 (`img/profile.png`). 비우면 사진 없이 나옵니다 |
+| `profile.info` | 이름 아래 줄들 (생년월일, 학교) |
+| `profile.blocks` | 첫 화면 오른쪽 칸들. `title`(소제목), `items`(`t` 항목, `s` 작게 나오는 글) |
 | `profile.tagline` | 맨 아래 이름 밑에 나오는 한 줄 (비우면 안 보임) |
 | `profile.contact.email` / `phone` | 하단에 표시됨. 비워 두면 안 나옵니다 |
 | `projects` 안의 `title` / `org` / `role` / `period` | 과제명 / 발주·기관 / 담당 역할 / 기간. 비워 두면 안 나옵니다. 기간은 목록과 상세 페이지에 함께 표시됩니다 |
@@ -201,3 +203,9 @@ git add .
 git commit -m "경력 내용 수정"
 git push                      # 1~2분 뒤 사이트에 반영
 ```
+
+## 첫 화면 사진 바꾸기
+
+첫 화면 사진은 `img/profile.png` 파일입니다. **배경이 투명한 PNG**여야 파란 도형 위에 자연스럽게 얹힙니다.
+GitHub 저장소에서 `img` 폴더 → `profile.png` 파일을 열고 오른쪽 위 `⋯` → **Delete** 한 뒤, 같은 이름(`profile.png`)으로 새 파일을 올리거나, 저장소 화면에 같은 이름의 파일을 다시 끌어다 놓으면 교체됩니다.
+사진이 작으면(가로 400px 미만) 흐릿하게 보이니, 가로 1000px 이상의 원본으로 배경을 지워 쓰면 훨씬 선명합니다.

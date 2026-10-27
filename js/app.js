@@ -112,18 +112,6 @@
     }
   };
 
-  /* 첫 화면 배경 파형 (움직이는 사인파) */
-  function heroWaves() {
-    var mk = function (fn, w) { return curve(fn, 0, w, 8); };
-    var a = mk(function (x) { return 112 - 46 * Math.sin(x / 400 * Math.PI * 2); }, 2000);
-    var b = mk(function (x) { var t = x / 640 * Math.PI * 2; return 112 - (36 * Math.sin(t) + 13 * Math.sin(3 * t + .6) + 5 * Math.sin(5 * t)); }, 2560);
-    var c = mk(function (x) { return 112 - 22 * Math.sin(x / 320 * Math.PI * 2 + 1); }, 1920);
-    return '<svg viewBox="0 0 1600 220" preserveAspectRatio="none" aria-hidden="true">' +
-      '<g class="wv" style="--p:320px;--t:18s"><path d="' + c + '" class="w3"/></g>' +
-      '<g class="wv" style="--p:640px;--t:26s"><path d="' + b + '" class="w2"/></g>' +
-      '<g class="wv" style="--p:400px;--t:16s"><path d="' + a + '" class="w1"/></g></svg>';
-  }
-
   /* ---------- 화면 조각 ---------- */
   function secHead(key) {
     var s = D.sections[key];
@@ -137,14 +125,20 @@
   }
 
   function heroHTML() {
-    var p = D.profile;
-    var words = p.cover && p.cover.length ? p.cover : ['PORT', 'FOLIO'];
-    return '<section class="hero dark" id="intro" data-section><div class="hero-bg" aria-hidden="true">' + heroWaves() + '</div>' +
-      '<div class="wrap hero-in"><h1 class="cover"><span class="sr-only">' + esc(p.name) + ' 포트폴리오</span>' +
-      '<span class="cover-art" aria-hidden="true">' +
-      words.map(function (w, i) { return '<span class="line"><span style="--i:' + i + '">' + esc(w) + '</span></span>'; }).join('') +
-      (p.nameEn ? '<span class="tape"><span>' + esc(p.nameEn) + '</span></span>' : '') + '</span></h1>' +
-      '<p class="hero-sum">' + esc(p.summary) + '</p></div></section>';
+    var p = D.profile, k = 0;
+    var d = function () { return ' style="--i:' + (k++) + '"'; };
+    var photo = p.photo ? '<figure class="cv-photo"><img src="' + esc(p.photo) + '" alt="' + esc(p.name) + ' 사진" decoding="async" onerror="this.parentNode.hidden=true"></figure>' : '';
+    var info = (p.info || []).map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
+    var blocks = (p.blocks || []).map(function (b) {
+      return '<section class="cv-blk"' + d() + '><h2>' + esc(b.title) + '</h2><ul>' + (b.items || []).map(function (it) {
+        return '<li><b>' + esc(it.t) + '</b>' + (it.s ? '<small>' + esc(it.s) + '</small>' : '') + '</li>';
+      }).join('') + '</ul></section>';
+    }).join('');
+    return '<section class="hero dark" id="intro" data-section>' +
+      '<div class="cv">' + photo +
+      '<div class="cv-text"><div class="cv-id"' + d() + '><h1><span class="ko">' + esc(p.name) + '</span>' +
+      (p.nameEn ? '<span class="en">' + esc(p.nameEn) + '</span>' : '') + '</h1>' +
+      (info ? '<ul class="cv-info">' + info + '</ul>' : '') + '</div>' + blocks + '</div></div></section>';
   }
 
   /* 역량: 왼쪽 메뉴 + 오른쪽 상세 */
