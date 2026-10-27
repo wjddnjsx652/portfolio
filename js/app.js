@@ -14,13 +14,13 @@
   var ESC_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ESC_MAP[c]; }); };
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var canHover = window.matchMedia('(hover: hover) and (pointer: fine) and (min-width: 901px)');
 
   var state = { evidence: {}, previews: {}, admin: null, filter: 'all', cap: null, proj: null };
 
   var ICON = {
     plus: '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M7 1v12M1 7h12"/></svg>',
     arrow: '<svg width="22" height="12" viewBox="0 0 22 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 9c5 0 12-1 19-7M14 1.5l6 .5-.5 6"/></svg>',
+    go: '<svg width="46" height="11" viewBox="0 0 46 11" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 9.5h43M35 1.5l9 8"/></svg>',
     left: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 8H2M7 3L2 8l5 5"/></svg>',
     right: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 8h12M9 3l5 5-5 5"/></svg>',
     camera: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 5.5a1 1 0 0 1 1-1h2l1-1.5h5l1 1.5h2a1 1 0 0 1 1 1v6.5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z"/><circle cx="8" cy="8.5" r="2.4"/></svg>',
@@ -141,20 +141,25 @@
       (info ? '<ul class="cv-info">' + info + '</ul>' : '') + '</div>' + blocks + '</div></div></section>';
   }
 
-  /* 역량: 왼쪽 메뉴 + 오른쪽 상세 */
+  /* 역량: 세로 이미지 패널 → 누르면 아래에 내용 */
   function capSectionHTML() {
-    return '<section class="sec dark" id="competency" data-section><div class="wrap">' + secHead('competency') +
-      '<div class="cap-layout"><div class="cap-menu" role="tablist" aria-label="역량" aria-orientation="vertical"><span class="cap-ind" aria-hidden="true"></span>' +
+    return '<section class="sec dark" id="competency" data-section><div class="wrap">' + secHead('competency') + '</div>' +
+      '<div class="cap-panels" id="capPanels">' +
       D.competencies.map(function (c) {
-        return '<button class="cap-item" type="button" role="tab" id="tab-' + c.id + '" data-cap="' + c.id + '" aria-selected="false" aria-controls="capView"><span>' + esc(c.short) + '</span><i>' + ICON.arrow + '</i></button>';
-      }).join('') + '</div><div class="cap-view" id="capView" role="tabpanel" aria-live="polite"></div></div></div></section>';
+        return '<button class="cap-panel" type="button" id="tab-' + c.id + '" data-cap="' + c.id + '" aria-expanded="false" aria-controls="capView">' +
+          (c.cover ? '<img class="cap-bg" src="' + esc(c.cover) + '" alt="" loading="lazy" decoding="async">' : '') +
+          '<span class="cap-name">' + esc(c.short) + '</span><span class="cap-go" aria-hidden="true">' + ICON.go + '</span></button>';
+      }).join('') + '</div>' +
+      '<div class="wrap"><div class="cap-view" id="capView" role="region" aria-live="polite" hidden></div></div></section>';
   }
   function capViewHTML(c) {
-    return '<div class="cap-img" data-media="' + c.id + '" data-art="' + c.art + '"></div>' +
-      '<h3>' + esc(c.title) + '</h3><p class="cap-lead">' + esc(c.role) + '</p>' +
-      '<h4 class="cap-sub">수행 업무</h4><dl class="cap-table">' +
-      c.tasks.map(function (t, i) { return '<div style="--r:' + i + '"><dt>' + esc(t.label) + '</dt><dd>' + esc(t.text) + '</dd></div>'; }).join('') + '</dl>' +
-      '<div class="ev-slot" data-ev="' + c.id + '"></div>';
+    return '<div class="cap-head"><h3>' + esc(c.title) + '</h3>' +
+      '<button class="cap-close" type="button" data-cap-close aria-label="역량 내용 닫기">' + ICON.del + '<span>닫기</span></button></div>' +
+      '<p class="cap-lead">' + esc(c.role) + '</p>' +
+      '<div class="cap-body"><div class="cap-img" data-media="' + c.id + '" data-art="' + c.art + '"></div>' +
+      '<div class="cap-main"><h4 class="cap-sub">수행 업무</h4><dl class="cap-table">' +
+      c.tasks.map(function (t, i) { return '<div style="--r:' + i + '"><dt>' + esc(t.label) + '</dt><dd>' + esc(t.text) + '</dd></div>'; }).join('') + '</dl></div>' +
+      '<div class="ev-slot" data-ev="' + c.id + '"></div></div>';
   }
 
   /* 프로젝트: 제목 목록 (누르면 상세 페이지) */
@@ -317,41 +322,46 @@
     if (thumb) { thumb.classList.add('pending'); thumb.textContent = a ? '반영 중 (약 1분)' : '사진 없음'; }
   }, true);
 
-  /* ---------- 역량 탭 ---------- */
-  function positionInd() {
-    var ind = $('.cap-ind'), act = $('.cap-item.is-active');
-    if (!ind || !act) return;
-    ind.style.setProperty('--y', act.offsetTop + 'px');
-    ind.style.setProperty('--h', act.offsetHeight + 'px');
+  /* ---------- 역량 패널 ---------- */
+  function scrollToPanels() {
+    var box = $('#capPanels'), g = $('#gnb');
+    if (!box) return;
+    var top = box.getBoundingClientRect().top + window.scrollY - (g ? g.offsetHeight : 76) - 12;
+    window.scrollTo({ top: Math.max(0, top), behavior: reduceMotion ? 'auto' : 'smooth' });
   }
-  function selectCap(id) {
+  function selectCap(id, forceScroll) {
     var c = compById(id);
     if (!c) return;
-    var changed = state.cap !== id;
+    var wasOpen = state.cap != null, view = $('#capView');
     state.cap = id;
-    $$('.cap-item').forEach(function (b) {
+    $$('.cap-panel').forEach(function (b) {
       var on = b.dataset.cap === id;
       b.classList.toggle('is-active', on);
-      b.setAttribute('aria-selected', String(on));
-      b.tabIndex = on ? 0 : -1;
+      b.setAttribute('aria-expanded', String(on));
     });
-    positionInd();
-    // 모바일: 가로로 스크롤되는 메뉴에서 선택 항목이 보이도록
-    var menu = $('.cap-menu'), act = $('.cap-item.is-active');
-    if (menu && act && menu.scrollWidth > menu.clientWidth + 2 && getComputedStyle(menu).display === 'flex') {
-      menu.scrollTo({ left: act.offsetLeft - 20, behavior: reduceMotion ? 'auto' : 'smooth' });
-    }
-    if (changed || !$('#capView').firstChild) {
-      var v = $('#capView');
-      v.setAttribute('aria-labelledby', 'tab-' + id);
-      v.innerHTML = capViewHTML(c);
+    $('#capPanels').classList.add('has-sel');
+    if (view.hidden || view.dataset.id !== id) {
+      view.dataset.id = id;
+      view.hidden = false;
+      view.setAttribute('aria-labelledby', 'tab-' + id);
+      view.innerHTML = capViewHTML(c);
       refreshEvidence();
     }
+    if (forceScroll || !wasOpen) scrollToPanels();
+  }
+  function closeCap(refocus) {
+    if (state.cap == null) return;
+    var id = state.cap, view = $('#capView');
+    state.cap = null;
+    $('#capPanels').classList.remove('has-sel');
+    $$('.cap-panel').forEach(function (b) { b.classList.remove('is-active'); b.setAttribute('aria-expanded', 'false'); });
+    view.hidden = true; view.innerHTML = ''; delete view.dataset.id; view.removeAttribute('aria-labelledby');
+    if (refocus) { var b = $('#tab-' + id); if (b) b.focus({ preventScroll: true }); }
+    scrollToPanels();
   }
   function gotoCap(id) {
     closeProj();
-    $('#competency').scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
-    setTimeout(function () { selectCap(id); }, reduceMotion ? 0 : 350);
+    selectCap(id, true);
   }
 
   /* ---------- 성과 필터 ---------- */
@@ -481,7 +491,8 @@
     if ((m = t.closest('[data-open-proj]'))) { openProj(m.dataset.openProj, m); return; }
     if (t.closest('[data-close-proj]')) { closeProj(); return; }
     if ((m = t.closest('[data-goto-cap]'))) { gotoCap(m.dataset.gotoCap); return; }
-    if ((m = t.closest('[data-cap]'))) { selectCap(m.dataset.cap); return; }
+    if (t.closest('[data-cap-close]')) { closeCap(true); return; }
+    if ((m = t.closest('[data-cap]'))) { if (m.dataset.cap === state.cap) closeCap(false); else selectCap(m.dataset.cap); return; }
     if ((m = t.closest('[data-filter]'))) { setFilter(m.dataset.filter, true); return; }
     if ((m = t.closest('[data-ev-open]'))) { openLB(m.dataset.evOpen, +m.dataset.i, m); return; }
     if ((m = t.closest('[data-lb]'))) {
@@ -492,20 +503,6 @@
     if (t === lb.el) closeLB();
   });
 
-  // 마우스를 올리면 해당 역량으로 전환 (PC)
-  document.addEventListener('pointerover', function (e) {
-    if (!canHover.matches || !e.target.closest) return;
-    var b = e.target.closest('.cap-item');
-    if (b && !b.classList.contains('is-active')) selectCap(b.dataset.cap);
-  });
-  // 키보드(Tab)로 이동했을 때만 전환. 마우스·터치는 click 이 처리
-  document.addEventListener('focusin', function (e) {
-    var b = e.target.closest && e.target.closest('.cap-item');
-    if (!b || b.classList.contains('is-active')) return;
-    var kb = true;
-    try { kb = b.matches(':focus-visible'); } catch (x) { kb = true; }
-    if (kb) selectCap(b.dataset.cap);
-  });
   document.addEventListener('keydown', function (e) {
     if (lb.el.classList.contains('open')) {
       if (e.key === 'Escape') { closeLB(); return; }
@@ -517,14 +514,8 @@
       if (e.key === 'Escape') { closeProj(); return; }
       trapTab(e, proj.el); return;
     }
-    var item = e.target.closest && e.target.closest('.cap-item');
-    if (item && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-      e.preventDefault();
-      var all = $$('.cap-item'), i = all.indexOf(item) + (e.key === 'ArrowDown' ? 1 : -1);
-      all[(i + all.length) % all.length].focus();
-    }
+    if (e.key === 'Escape' && state.cap != null && e.target.closest && e.target.closest('#competency')) closeCap(true);
   });
-  window.addEventListener('resize', positionInd);
 
   /* ---------- 시작 ---------- */
   function init() {
@@ -544,7 +535,6 @@
       }, { rootMargin: '0px 0px -12% 0px', threshold: 0.12 });
     }
 
-    selectCap(D.competencies[0].id);
     renderHist(false);
     $$('#awardList .hist-item').forEach(function (el) { if (histIO) histIO.observe(el); else el.classList.add('in'); });
     refreshEvidence();
@@ -563,7 +553,6 @@
       }, { rootMargin: '-40% 0px -55% 0px' });
       $$('[data-section]').forEach(function (s) { io.observe(s); });
     }
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(positionInd);
   }
 
   init();
