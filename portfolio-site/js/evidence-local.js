@@ -110,5 +110,12 @@ window.PORTFOLIO_EVIDENCE = {
       "caption": "대용량 전원 계통 구성도",
       "added": "2026-10-26"
     }
+  ],
+  "c6": [
+    {
+      "src": "evidence/c6-1a18000000-0.jpg",
+      "caption": "충전설비 시험 구성 및 계측",
+      "added": "2026-11-10"
+    }
   ]
 };
